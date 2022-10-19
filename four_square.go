@@ -57,8 +57,8 @@ func LagFourSquares(n *big.Int) (FourInt, error) {
 	// Gaussian integer: 1 + i
 	gi := gaussian1PlusIPow(e)
 	hurwitzProd := comp.NewHurwitzInt(gi.R, gi.I, big0, big0, false)
-	hurwitzProd.Prod(hurwitzProd, hurwitzGCRD)
-	w1, w2, w3, w4 := hurwitzProd.ValInt()
+	hurwitzResult := new(comp.HurwitzInt).Prod(hurwitzProd, hurwitzGCRD)
+	w1, w2, w3, w4 := hurwitzResult.ValInt()
 	fi := NewFourInt(w1, w2, w3, w4)
 	return fi, nil
 }
