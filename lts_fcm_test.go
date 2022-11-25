@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestSqLagFourSquares(t *testing.T) {
+func TestSolveFCM(t *testing.T) {
 	type args struct {
 		n *big.Int
 	}
@@ -22,13 +22,13 @@ func TestSqLagFourSquares(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := SqLagFourSquares(tt.args.n)
+			got, err := SolveFCM(tt.args.n)
 			if err != nil {
-				t.Errorf("SqLagFourSquares() error = %v", err)
+				t.Errorf("SolveFCM() error = %v", err)
 				return
 			}
 			if !Verify(tt.args.n, got) {
-				t.Errorf("SqLagFourSquares() verify failed, got: %v != %v", got, tt.args.n)
+				t.Errorf("SolveFCM() verify failed, got: %v != %v", got, tt.args.n)
 				return
 			}
 		})
