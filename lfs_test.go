@@ -133,7 +133,7 @@ func TestVerify(t *testing.T) {
 	}
 }
 
-func TestLagFourSquares(t *testing.T) {
+func TestSolve(t *testing.T) {
 	type args struct {
 		n *big.Int
 	}
@@ -159,13 +159,13 @@ func TestLagFourSquares(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := LagFourSquares(tt.args.n)
+			got, err := Solve(tt.args.n)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("LagFourSquares() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Solve() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !Verify(tt.args.n, got) {
-				t.Errorf("LagFourSquares() verify failed, got: %v != %v", got, tt.args.n)
+				t.Errorf("Solve() verify failed, got: %v != %v", got, tt.args.n)
 			}
 		})
 	}

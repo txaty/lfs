@@ -4,9 +4,8 @@ import (
 	"errors"
 	"math/big"
 
-	"lukechampine.com/frand"
-
 	comp "github.com/txaty/go-bigcomplex"
+	"lukechampine.com/frand"
 )
 
 const preComputeLmt = 20
@@ -134,7 +133,7 @@ func prime(bits int) (p *big.Int, err error) {
 		p.SetBytes(bytes)
 
 		// Calculate the value mod the product of smallPrimes. If it's
-		// a multiple of any of these primes we add two until it isn't.
+		// a multiple of these primes we add two until it isn't.
 		// The probability of overflowing is minimal and can be ignored
 		// because we still perform Miller-Rabin tests on the result.
 		bigMod.Mod(p, smallPrimesProduct)

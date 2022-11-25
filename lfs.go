@@ -18,11 +18,11 @@ const (
 
 var numRoutine = runtime.NumCPU()
 
-// LagFourSquares calculates the Lagrange four squares representation of a positive integer
+// Solve calculates the Lagrange four squares representation of a positive integer
 // Paper: Finding the Four Squares in Lagrange’s Theorem
 // Link: http://pollack.uga.edu/finding4squares.pdf (page 6)
 // The input should be an odd positive integer no less than 9
-func LagFourSquares(n *big.Int) (FourInt, error) {
+func Solve(n *big.Int) (FourInt, error) {
 	if n.Sign() == 0 {
 		res := NewFourInt(precomputedHurwitzGCRDs[0].ValInt())
 		return res, nil
@@ -40,9 +40,9 @@ func LagFourSquares(n *big.Int) (FourInt, error) {
 			if err != nil {
 				return FourInt{}, err
 			}
-			gcd = randTrails(nc, primeProd)
+			gcd = randTrail(nc, primeProd)
 		} else {
-			gcd = randLargeTrails(nc, nBitLen)
+			gcd = randTrailLarge(nc, nBitLen)
 		}
 		var err error
 		hurwitzGCRD, err = denouement(nc, gcd)
@@ -141,7 +141,7 @@ func preCompute(n *big.Int) (*big.Int, error) {
 	return new(big.Int).Set(prod), nil
 }
 
-func randTrails(n, primeProd *big.Int) *comp.GaussianInt {
+func randTrail(n, primeProd *big.Int) *comp.GaussianInt {
 	// use goroutines to choose a random number between [0, n^5 / 2 / numRoutine]
 	// then construct k based on the random number
 	// and check the validity of the trails
@@ -163,12 +163,12 @@ func randTrails(n, primeProd *big.Int) *comp.GaussianInt {
 		adds = append(adds, big.NewInt(int64(2*i+1))) // 2i+1
 	}
 	for _, add := range adds {
-		go findSRoutine(ctx, add, mul, randLmt, preP, resChan)
+		go routineFindS(ctx, add, mul, randLmt, preP, resChan)
 	}
 	return <-resChan
 }
 
-func randLargeTrails(n *big.Int, bitLen int) *comp.GaussianInt {
+func randTrailLarge(n *big.Int, bitLen int) *comp.GaussianInt {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	resChan := make(chan *comp.GaussianInt)
@@ -178,7 +178,7 @@ func randLargeTrails(n *big.Int, bitLen int) *comp.GaussianInt {
 	randLmt := iPool.Get().(*big.Int).Lsh(big1, uint(bl))
 	defer iPool.Put(randLmt)
 	for i := 0; i < numRoutine; i++ {
-		go findLargeSRoutine(ctx, randLmt, preP, resChan)
+		go routineFindSLarge(ctx, randLmt, preP, resChan)
 	}
 	return <-resChan
 }
@@ -200,7 +200,7 @@ func setInitRandBitLen(bitLen int) int {
 	return int(math.Round(lenF))
 }
 
-func findSRoutine(ctx context.Context, mul, add, randLmt, preP *big.Int, resChan chan<- *comp.GaussianInt) {
+func routineFindS(ctx context.Context, mul, add, randLmt, preP *big.Int, resChan chan<- *comp.GaussianInt) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -237,13 +237,13 @@ func pickS(mul, add, randLmt, preP *big.Int) (*big.Int, *big.Int, bool, error) {
 	return determineSAndP(k, preP)
 }
 
-func findLargeSRoutine(ctx context.Context, randLmt, preP *big.Int, resChan chan<- *comp.GaussianInt) {
+func routineFindSLarge(ctx context.Context, randLmt, preP *big.Int, resChan chan<- *comp.GaussianInt) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			s, p, ok, err := pickLargeS(randLmt, preP)
+			s, p, ok, err := pickSLarge(randLmt, preP)
 			if err != nil {
 				panic(err)
 			}
@@ -265,7 +265,7 @@ func findLargeSRoutine(ctx context.Context, randLmt, preP *big.Int, resChan chan
 	}
 }
 
-func pickLargeS(randLmt, preP *big.Int) (*big.Int, *big.Int, bool, error) {
+func pickSLarge(randLmt, preP *big.Int) (*big.Int, *big.Int, bool, error) {
 	k := frand.BigIntn(randLmt)
 	k.Or(k, big1)
 	return determineSAndP(k, preP)

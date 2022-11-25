@@ -9,9 +9,9 @@ import (
 	comp "github.com/txaty/go-bigcomplex"
 )
 
-// UnconditionalLagrangeFourSquares calculates the Lagrange four squares for a given non-positive integer
+// SolveUnconditional calculates the Lagrange four squares for a given non-positive integer
 // the method doesn't rely on the Extended Riemann Hypothesis (ERH)
-func UnconditionalLagrangeFourSquares(n *big.Int) (FourInt, error) {
+func SolveUnconditional(n *big.Int) (FourInt, error) {
 	if n.Sign() == 0 {
 		res := NewFourInt(precomputedHurwitzGCRDs[0].ValInt())
 		return res, nil
