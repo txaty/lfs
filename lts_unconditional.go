@@ -209,7 +209,8 @@ func randomChoiceXY(n *big.Int) (r, x, y *big.Int, err error) {
 
 func computeUV(r1, n *big.Int, primes []*big.Int) (u, v *big.Int, err error) {
 	uvi := comp.NewGaussianInt(big1, big0)
-	ss, err := computeSquares(n)
+	var ss *squareCache
+	ss, err = computeSquares(n)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -235,8 +236,7 @@ func computeUV(r1, n *big.Int, primes []*big.Int) (u, v *big.Int, err error) {
 }
 
 func computeSquares(n *big.Int) (*squareCache, error) {
-	lmt := log2(n)
-	lmt = int(math.Sqrt(float64(lmt)))
+	lmt := int(math.Sqrt(float64(log2(n))))
 	for i := sCache.max; i <= lmt; i++ {
 		bigI := big.NewInt(int64(i))
 		sq := new(big.Int).Mul(bigI, bigI)
