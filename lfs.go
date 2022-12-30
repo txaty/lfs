@@ -2,7 +2,7 @@ package lfs
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"math"
 	"math/big"
 	"runtime"
@@ -13,42 +13,31 @@ import (
 
 const (
 	randLmtThreshold = 16
-	maxUFindingIter  = 10
+	maxFindUIter     = 10
 )
 
 var numRoutine = runtime.NumCPU()
 
 // Solve calculates the Lagrange four squares representation of a positive integer
-// Paper: Finding the Four Squares in Lagrange’s Theorem
-// Link: http://pollack.uga.edu/finding4squares.pdf (page 6)
-// The input should be an odd positive integer no less than 9
-func Solve(n *big.Int) (FourInt, error) {
+// The algorithm is modified from the paper "Finding the Four Squares in Lagrange’s Theorem"
+func Solve(n *big.Int) FourInt {
 	if n.Sign() == 0 {
-		res := NewFourInt(precomputedHurwitzGCRDs[0].ValInt())
-		return res, nil
+		return NewFourInt(precomputedHurwitzGCRDs[0].ValInt())
 	}
 	nc, e := divideN(n)
 	var hurwitzGCRD *comp.HurwitzInt
 
-	if nc.Cmp(bigPreComputeLmt) <= 0 {
+	if nc.Cmp(bigPrecomputeLmt) <= 0 {
 		hurwitzGCRD = precomputedHurwitzGCRDs[nc.Int64()]
 	} else {
 		var gcd *comp.GaussianInt
 		nBitLen := nc.BitLen()
 		if nBitLen < randLmtThreshold {
-			primeProd, err := preCompute(nc)
-			if err != nil {
-				return FourInt{}, err
-			}
-			gcd = randTrail(nc, primeProd)
+			gcd = randTrail(nc, precompute(nc))
 		} else {
 			gcd = randTrailLarge(nc, nBitLen)
 		}
-		var err error
-		hurwitzGCRD, err = denouement(nc, gcd)
-		if err != nil {
-			return FourInt{}, err
-		}
+		hurwitzGCRD = denouement(nc, gcd)
 	}
 
 	// if x'^2 + Y'^2 + Z'^2 + W'^2 = n'
@@ -59,8 +48,7 @@ func Solve(n *big.Int) (FourInt, error) {
 	hurwitzProd := comp.NewHurwitzInt(gi.R, gi.I, big0, big0, false)
 	hurwitzProd.Prod(hurwitzProd, hurwitzGCRD)
 	w1, w2, w3, w4 := hurwitzProd.ValInt()
-	fi := NewFourInt(w1, w2, w3, w4)
-	return fi, nil
+	return NewFourInt(w1, w2, w3, w4)
 }
 
 func isValidGaussianIntGCD(gcd *comp.GaussianInt) bool {
@@ -120,15 +108,15 @@ func gaussian1PlusIPow(e int) *comp.GaussianInt {
 	return gaussianProd
 }
 
-// preCompute determine the primes not exceeding log n and compute their product
+// precompute determine the primes not exceeding log n and compute their product
 // the function only handles positive integers larger than pre-computed range (20)
-func preCompute(n *big.Int) (*big.Int, error) {
-	if n.Cmp(bigPreComputeLmt) <= 0 {
-		return nil, fmt.Errorf("n should be larger than %d", preComputeLmt)
+func precompute(n *big.Int) *big.Int {
+	if n.Cmp(bigPrecomputeLmt) <= 0 {
+		log.Panicf("n should be larger than %d", precomputeLmt)
 	}
 	logN := log2(n)
 	if logN <= pCache.max {
-		return pCache.findPrimeProd(logN), nil
+		return pCache.findPrimeProd(logN)
 	}
 	pm, _ := pCache.m.Load(pCache.max)
 	prod := iPool.Get().(*big.Int).Set(pm.(*big.Int))
@@ -138,7 +126,7 @@ func preCompute(n *big.Int) (*big.Int, error) {
 	for idx := pCache.max + 2; idx < logN; idx += 2 {
 		pCache.checkAddPrime(idx, prod, opt)
 	}
-	return new(big.Int).Set(prod), nil
+	return new(big.Int).Set(prod)
 }
 
 func randTrail(n, primeProd *big.Int) *comp.GaussianInt {
@@ -302,7 +290,7 @@ func determineSAndP(k, preP *big.Int) (*big.Int, *big.Int, bool, error) {
 	// use normal rand source to prevent acquiring crypto rand reader mutex
 	// to reduce the probability of picking up a prime number, we only choose even numbers
 	findValidU := false
-	for i := 0; i < maxUFindingIter; i++ {
+	for i := 0; i < maxFindUIter; i++ {
 		u = frand.BigIntn(halfP)
 		u.Lsh(u, 1)
 
@@ -339,7 +327,7 @@ func gaussianIntGCD(s, p *big.Int) *comp.GaussianInt {
 	return gcd
 }
 
-func denouement(n *big.Int, gcd *comp.GaussianInt) (*comp.HurwitzInt, error) {
+func denouement(n *big.Int, gcd *comp.GaussianInt) *comp.HurwitzInt {
 	// compute gcrd(A + Bi + j, n), normalized to have integer component
 	// Hurwitz integer: A + Bi + j
 	hurwitzInt := hiPool.Get().(*comp.HurwitzInt).Update(gcd.R, gcd.I, big1, big0, false)
@@ -349,7 +337,7 @@ func denouement(n *big.Int, gcd *comp.GaussianInt) (*comp.HurwitzInt, error) {
 	defer hiPool.Put(hurwitzN)
 	gcrd := new(comp.HurwitzInt).GCRD(hurwitzInt, hurwitzN)
 
-	return gcrd, nil
+	return gcrd
 }
 
 // Verify checks if the four-square sum is equal to the original integer

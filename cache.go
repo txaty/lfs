@@ -14,7 +14,6 @@ var (
 	big2 = big.NewInt(2)
 	big3 = big.NewInt(3)
 	big4 = big.NewInt(4)
-	big8 = big.NewInt(8)
 
 	// sync pool for big integers, lease GC and improve performance
 	iPool = sync.Pool{
@@ -32,12 +31,10 @@ var (
 	pCache = newPrimeCache(16)
 	// cache for computed Gaussian integers
 	giCache = sync.Map{}
-	// cache for precomputed square numbers
-	sCache = newSquareCache(0)
 )
 
-// ResetPrimeCache resets the prime cache
-func ResetPrimeCache() {
+// ResetCachePrime resets the prime cache
+func ResetCachePrime() {
 	pCache = newPrimeCache(0)
 }
 
@@ -118,8 +115,8 @@ func (p *primeCache) checkAddPrime(n int, prod, opt *big.Int) {
 	p.max = n
 }
 
-// ResetGaussianIntCache resets the Gaussian integer cache
-func ResetGaussianIntCache() {
+// ResetCacheGaussianInt resets the Gaussian integer cache
+func ResetCacheGaussianInt() {
 	giCache = sync.Map{}
 }
 
@@ -132,61 +129,4 @@ func CacheGaussianInt(e int) {
 		giCache.Store(i, gaussianProd.Copy())
 		gaussianProd.Prod(gaussianProd, gaussianProd)
 	}
-}
-
-// CacheSquareNums caches the square numbers of x, x <= sqrt(bit length)
-func CacheSquareNums(bitLen int) {
-	lmt := int(math.Sqrt(float64(bitLen)))
-	sCache = newSquareCache(lmt)
-}
-
-// ResetSquareCache resets the cache for square numbers
-func ResetSquareCache() {
-	sCache = newSquareCache(0)
-}
-
-type squareCache struct {
-	sm  map[string]*big.Int
-	sl  []*big.Int
-	max int
-}
-
-func newSquareCache(max int) *squareCache {
-	ss := &squareCache{
-		sm: make(map[string]*big.Int),
-	}
-	if max > 0 {
-		ss.sl = make([]*big.Int, max)
-		for i := 1; i <= max; i++ {
-			bigI := big.NewInt(int64(i))
-			sq := new(big.Int).Mul(bigI, bigI)
-			ss.add(bigI, sq)
-		}
-		ss.max = max
-	}
-	return ss
-}
-
-func (s *squareCache) add(n, nsq *big.Int) {
-	if _, ok := s.sm[nsq.String()]; !ok {
-		s.sm[nsq.String()] = n
-		s.sl = append(s.sl, nsq)
-	}
-}
-
-func (s *squareCache) findXY(n *big.Int) (x, y *big.Int) {
-	opt := iPool.Get().(*big.Int)
-	defer iPool.Put(opt)
-	for _, sq := range s.sl {
-		if sq.Cmp(n) == 1 {
-			break
-		}
-		opt.Sub(n, sq)
-		if resY, ok := s.sm[opt.String()]; ok {
-			x = new(big.Int).Set(s.sm[sq.String()])
-			y = new(big.Int).Set(resY)
-			return
-		}
-	}
-	return
 }
