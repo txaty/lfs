@@ -14,13 +14,13 @@ var (
 
 // SolveFCM finds the Lagrange four square solution for a very large integer.
 // It uses Fermat's Christmas Theorem one more time to further reduce the integer size.
-func SolveFCM(n *big.Int) FourInt {
+func SolveFCM(n *big.Int, numRoutine int) FourInt {
 	if n.Cmp(thresholdFCM) < 0 {
-		return Solve(n)
+		return Solve(n, numRoutine)
 	}
 
 	nc, e := divideN(n)
-	gcd, l := randTrailFCM(nc)
+	gcd, l := randTrailFCM(nc, numRoutine)
 	hurwitzGCRD := denouementFCM(nc, l, gcd)
 
 	// if x'^2 + Y'^2 + Z'^2 + W'^2 = n'
@@ -34,7 +34,7 @@ func SolveFCM(n *big.Int) FourInt {
 	return NewFourInt(w1, w2, w3, w4)
 }
 
-func randTrailFCM(nc *big.Int) (*comp.GaussianInt, *big.Int) {
+func randTrailFCM(nc *big.Int, numRoutine int) (*comp.GaussianInt, *big.Int) {
 	preP := iPool.Get().(*big.Int).Lsh(nc, 1)
 	defer iPool.Put(preP)
 	ctx, cancel := context.WithCancel(context.Background())
