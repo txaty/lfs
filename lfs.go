@@ -2,13 +2,12 @@ package lfs
 
 import (
 	"context"
+	comp "github.com/txaty/go-bigcomplex"
 	"log"
+	"lukechampine.com/frand"
 	"math"
 	"math/big"
 	"runtime"
-
-	comp "github.com/txaty/go-bigcomplex"
-	"lukechampine.com/frand"
 )
 
 const (
@@ -16,13 +15,14 @@ const (
 	maxFindUIter     = 10
 )
 
-var numRoutine = runtime.NumCPU()
-
 // Solve calculates the Lagrange four squares representation of a positive integer
 // The algorithm is modified from the paper "Finding the Four Squares in Lagrange’s Theorem"
-func Solve(n *big.Int) FourInt {
+func Solve(n *big.Int, numRoutine int) FourInt {
 	if n.Sign() == 0 {
 		return NewFourInt(precomputedHurwitzGCRDs[0].ValInt())
+	}
+	if numRoutine <= 0 {
+		numRoutine = runtime.NumCPU()
 	}
 	nc, e := divideN(n)
 	var hurwitzGCRD *comp.HurwitzInt
@@ -33,9 +33,9 @@ func Solve(n *big.Int) FourInt {
 		var gcd *comp.GaussianInt
 		nBitLen := nc.BitLen()
 		if nBitLen < randLmtThreshold {
-			gcd = randTrail(nc, precompute(nc))
+			gcd = randTrail(nc, precompute(nc), numRoutine)
 		} else {
-			gcd = randTrailLarge(nc, nBitLen)
+			gcd = randTrailLarge(nc, nBitLen, numRoutine)
 		}
 		hurwitzGCRD = denouement(nc, gcd)
 	}
@@ -109,7 +109,7 @@ func gaussian1PlusIPow(e int) *comp.GaussianInt {
 }
 
 // precompute determine the primes not exceeding log n and compute their product
-// the function only handles positive integers larger than pre-computed range (20)
+// the function only handles positive integers larger than precomputed range (20)
 func precompute(n *big.Int) *big.Int {
 	if n.Cmp(bigPrecomputeLmt) <= 0 {
 		log.Panicf("n should be larger than %d", precomputeLmt)
@@ -129,7 +129,7 @@ func precompute(n *big.Int) *big.Int {
 	return new(big.Int).Set(prod)
 }
 
-func randTrail(n, primeProd *big.Int) *comp.GaussianInt {
+func randTrail(n, primeProd *big.Int, numRoutine int) *comp.GaussianInt {
 	// use goroutines to choose a random number between [0, n^5 / 2 / numRoutine]
 	// then construct k based on the random number
 	// and check the validity of the trails
@@ -156,7 +156,7 @@ func randTrail(n, primeProd *big.Int) *comp.GaussianInt {
 	return <-resChan
 }
 
-func randTrailLarge(n *big.Int, bitLen int) *comp.GaussianInt {
+func randTrailLarge(n *big.Int, bitLen, numRoutine int) *comp.GaussianInt {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	resChan := make(chan *comp.GaussianInt)
