@@ -14,19 +14,14 @@ var (
 
 // SolveFCM finds the Lagrange four square solution for a very large integer.
 // It uses Fermat's Christmas Theorem one more time to further reduce the integer size.
-func SolveFCM(n *big.Int) (FourInt, error) {
+func SolveFCM(n *big.Int) FourInt {
 	if n.Cmp(thresholdFCM) < 0 {
 		return Solve(n)
 	}
 
 	nc, e := divideN(n)
-	var hurwitzGCRD *comp.HurwitzInt
 	gcd, l := randTrailFCM(nc)
-	var err error
-	hurwitzGCRD, err = denouementFCM(nc, l, gcd)
-	if err != nil {
-		return FourInt{}, err
-	}
+	hurwitzGCRD := denouementFCM(nc, l, gcd)
 
 	// if x'^2 + Y'^2 + Z'^2 + W'^2 = n'
 	// then x^2 + Y^2 + Z^2 + W^2 = n for x, Y, Z, W defined by
@@ -36,8 +31,7 @@ func SolveFCM(n *big.Int) (FourInt, error) {
 	hurwitzProd := comp.NewHurwitzInt(gi.R, gi.I, big0, big0, false)
 	hurwitzProd.Prod(hurwitzProd, hurwitzGCRD)
 	w1, w2, w3, w4 := hurwitzProd.ValInt()
-	fi := NewFourInt(w1, w2, w3, w4)
-	return fi, nil
+	return NewFourInt(w1, w2, w3, w4)
 }
 
 func randTrailFCM(nc *big.Int) (*comp.GaussianInt, *big.Int) {
@@ -75,10 +69,7 @@ func routineFindSfcm(ctx context.Context, randLmt, preP *big.Int, resChan chan<-
 		case <-ctx.Done():
 			return
 		default:
-			s, p, l, ok, err := pickSfcm(randLmt, preP)
-			if err != nil {
-				panic(err)
-			}
+			s, p, l, ok := pickSfcm(randLmt, preP)
 			if !ok {
 				continue
 			}
@@ -97,7 +88,7 @@ func routineFindSfcm(ctx context.Context, randLmt, preP *big.Int, resChan chan<-
 	}
 }
 
-func pickSfcm(randLmt, preP *big.Int) (s, p, l *big.Int, found bool, err error) {
+func pickSfcm(randLmt, preP *big.Int) (s, p, l *big.Int, found bool) {
 	l = frand.BigIntn(randLmt)
 	l.Lsh(l, 1)
 	l.Add(l, big1)
@@ -105,10 +96,10 @@ func pickSfcm(randLmt, preP *big.Int) (s, p, l *big.Int, found bool, err error) 
 	defer iPool.Put(lSq)
 	p = new(big.Int).Sub(preP, lSq)
 	if p.Sign() <= 0 {
-		return nil, nil, nil, false, nil
+		return nil, nil, nil, false
 	}
 	if !p.ProbablyPrime(0) {
-		return nil, nil, nil, false, nil
+		return nil, nil, nil, false
 	}
 
 	pMinus1 := iPool.Get().(*big.Int).Sub(p, big1)
@@ -121,7 +112,7 @@ func pickSfcm(randLmt, preP *big.Int) (s, p, l *big.Int, found bool, err error) 
 	defer iPool.Put(u)
 	opt := iPool.Get().(*big.Int)
 	defer iPool.Put(opt)
-	for i := 0; i < maxUFindingIter; i++ {
+	for i := 0; i < maxFindUIter; i++ {
 		u = frand.BigIntn(halfP)
 		u.Lsh(u, 1)
 
@@ -134,7 +125,7 @@ func pickSfcm(randLmt, preP *big.Int) (s, p, l *big.Int, found bool, err error) 
 		}
 	}
 	if !found {
-		return nil, nil, nil, false, nil
+		return nil, nil, nil, false
 	}
 
 	// compute s = u^((p - 1) / 4) mod p
@@ -143,7 +134,7 @@ func pickSfcm(randLmt, preP *big.Int) (s, p, l *big.Int, found bool, err error) 
 	return
 }
 
-func denouementFCM(n, l *big.Int, gcd *comp.GaussianInt) (*comp.HurwitzInt, error) {
+func denouementFCM(n, l *big.Int, gcd *comp.GaussianInt) *comp.HurwitzInt {
 	// compute gcrd(A + Bi + Lj, n), normalized to have integer component
 	// Hurwitz integer: A + Bi + Lj
 	hurwitzInt := hiPool.Get().(*comp.HurwitzInt).Update(gcd.R, gcd.I, l, big0, false)
@@ -153,5 +144,5 @@ func denouementFCM(n, l *big.Int, gcd *comp.GaussianInt) (*comp.HurwitzInt, erro
 	defer hiPool.Put(hurwitzN)
 	gcrd := new(comp.HurwitzInt).GCRD(hurwitzInt, hurwitzN)
 
-	return gcrd, nil
+	return gcrd
 }

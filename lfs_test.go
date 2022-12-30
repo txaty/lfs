@@ -21,51 +21,35 @@ func setup() {
 	}
 }
 
-func Test_preCompute(t *testing.T) {
+func Test_precompute(t *testing.T) {
 	type args struct {
 		n *big.Int
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    *big.Int
-		wantErr bool
+		name string
+		args args
+		want *big.Int
 	}{
-		{
-			name: "test_8",
-			args: args{
-				n: big.NewInt(8),
-			},
-			want:    nil,
-			wantErr: true,
-		},
 		{
 			name: "test_2^20",
 			args: args{
 				n: &big2Pow20,
 			},
-			want:    big.NewInt(9699690),
-			wantErr: false,
+			want: big.NewInt(9699690),
 		},
 		{
 			name: "test_2^32",
 			args: args{
 				n: &big2Pow32,
 			},
-			want:    big.NewInt(200560490130),
-			wantErr: false,
+			want: big.NewInt(200560490130),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			setup()
-			got, err := preCompute(tt.args.n)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("preCompute() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("preCompute() got = %v, want %v", got, tt.want)
+			if got := precompute(tt.args.n); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("precompute() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -138,33 +122,25 @@ func TestSolve(t *testing.T) {
 		n *big.Int
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name string
+		args args
 	}{
 		{
 			name: "test_4",
 			args: args{
 				n: big.NewInt(4),
 			},
-			wantErr: false,
 		},
 		{
 			name: "test_35955023",
 			args: args{
 				n: big.NewInt(35955023),
 			},
-			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Solve(tt.args.n)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Solve() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !Verify(tt.args.n, got) {
+			if got := Solve(tt.args.n); !Verify(tt.args.n, got) {
 				t.Errorf("Solve() verify failed, got: %v != %v", got, tt.args.n)
 			}
 		})

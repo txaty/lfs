@@ -6,11 +6,11 @@ import (
 	comp "github.com/txaty/go-bigcomplex"
 )
 
-const preComputeLmt = 20
+const precomputeLmt = 20
 
 var (
 	// precomputed Hurwitz GCRDs for small integers
-	precomputedHurwitzGCRDs = [preComputeLmt + 1]*comp.HurwitzInt{
+	precomputedHurwitzGCRDs = [precomputeLmt + 1]*comp.HurwitzInt{
 		comp.NewHurwitzInt(big0, big0, big0, big0, false), // 0: 0, 0, 0, 0
 		comp.NewHurwitzInt(big1, big0, big0, big0, false), // 1: 1, 0, 0, 0
 		comp.NewHurwitzInt(big1, big1, big0, big0, false), // 2: 1, 1, 0, 0
@@ -33,7 +33,7 @@ var (
 		comp.NewHurwitzInt(big4, big1, big1, big1, false), // 19: 4, 1, 1, 1
 		comp.NewHurwitzInt(big4, big2, big0, big0, false), // 20: 4, 2, 0, 0
 	}
-	bigPreComputeLmt = big.NewInt(preComputeLmt)
+	bigPrecomputeLmt = big.NewInt(precomputeLmt)
 	tinyPrimeProd    = big.NewInt(210) // 2 * 3 * 5 * 7
 )
 

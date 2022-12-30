@@ -33,8 +33,8 @@ var (
 	giCache = sync.Map{}
 )
 
-// ResetPrimeCache resets the prime cache
-func ResetPrimeCache() {
+// ResetCachePrime resets the prime cache
+func ResetCachePrime() {
 	pCache = newPrimeCache(0)
 }
 
@@ -115,8 +115,8 @@ func (p *primeCache) checkAddPrime(n int, prod, opt *big.Int) {
 	p.max = n
 }
 
-// ResetGaussianIntCache resets the Gaussian integer cache
-func ResetGaussianIntCache() {
+// ResetCacheGaussianInt resets the Gaussian integer cache
+func ResetCacheGaussianInt() {
 	giCache = sync.Map{}
 }
 
