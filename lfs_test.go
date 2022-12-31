@@ -119,7 +119,8 @@ func TestVerify(t *testing.T) {
 
 func TestSolve(t *testing.T) {
 	type args struct {
-		n *big.Int
+		n          *big.Int
+		numRoutine int
 	}
 	tests := []struct {
 		name string
@@ -128,7 +129,8 @@ func TestSolve(t *testing.T) {
 		{
 			name: "test_4",
 			args: args{
-				n: big.NewInt(4),
+				n:          big.NewInt(4),
+				numRoutine: 4,
 			},
 		},
 		{
@@ -140,7 +142,7 @@ func TestSolve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Solve(tt.args.n); !Verify(tt.args.n, got) {
+			if got := Solve(tt.args.n, tt.args.numRoutine); !Verify(tt.args.n, got) {
 				t.Errorf("Solve() verify failed, got: %v != %v", got, tt.args.n)
 			}
 		})
