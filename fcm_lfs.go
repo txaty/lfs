@@ -9,19 +9,19 @@ import (
 )
 
 var (
-	thresholdFCM = new(big.Int).Lsh(big1, 500)
+	fcmThreshold = new(big.Int).Lsh(big1, 500)
 )
 
-// SolveFCM finds the Lagrange four square solution for a very large integer.
+// FCMSolve finds the Lagrange four square solution for a very large integer.
 // It uses Fermat's Christmas Theorem one more time to further reduce the integer size.
-func SolveFCM(n *big.Int, numRoutine int) FourInt {
-	if n.Cmp(thresholdFCM) < 0 {
+func FCMSolve(n *big.Int, numRoutine int) FourInt {
+	if n.Cmp(fcmThreshold) < 0 {
 		return Solve(n, numRoutine)
 	}
 
 	nc, e := divideN(n)
-	gcd, l := randTrailFCM(nc, numRoutine)
-	hurwitzGCRD := denouementFCM(nc, l, gcd)
+	gcd, l := fcmRandTrail(nc, numRoutine)
+	hurwitzGCRD := fcmDenouement(nc, l, gcd)
 
 	// if x'^2 + Y'^2 + Z'^2 + W'^2 = n'
 	// then x^2 + Y^2 + Z^2 + W^2 = n for x, Y, Z, W defined by
@@ -34,22 +34,22 @@ func SolveFCM(n *big.Int, numRoutine int) FourInt {
 	return NewFourInt(w1, w2, w3, w4)
 }
 
-func randTrailFCM(nc *big.Int, numRoutine int) (*comp.GaussianInt, *big.Int) {
+func fcmRandTrail(nc *big.Int, numRoutine int) (*comp.GaussianInt, *big.Int) {
 	preP := iPool.Get().(*big.Int).Lsh(nc, 1)
 	defer iPool.Put(preP)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	resChan := make(chan findResultFCM)
-	randLmt := iPool.Get().(*big.Int).Lsh(big1, setRandBitLenFCM(preP))
+	resChan := make(chan fcmFindResult)
+	randLmt := iPool.Get().(*big.Int).Lsh(big1, fcmSetRandBitLen(preP))
 	defer iPool.Put(randLmt)
 	for i := 0; i < numRoutine; i++ {
-		go routineFindSfcm(ctx, randLmt, preP, resChan)
+		go fcmRoutineFindS(ctx, randLmt, preP, resChan)
 	}
 	res := <-resChan
 	return res.gcd, res.l
 }
 
-func setRandBitLenFCM(n *big.Int) uint {
+func fcmSetRandBitLen(n *big.Int) uint {
 	bitLen := n.BitLen()
 	ret := uint(float32(bitLen) / 2)
 	if ret < 10 {
@@ -58,18 +58,18 @@ func setRandBitLenFCM(n *big.Int) uint {
 	return ret
 }
 
-type findResultFCM struct {
+type fcmFindResult struct {
 	gcd *comp.GaussianInt
 	l   *big.Int
 }
 
-func routineFindSfcm(ctx context.Context, randLmt, preP *big.Int, resChan chan<- findResultFCM) {
+func fcmRoutineFindS(ctx context.Context, randLmt, preP *big.Int, resChan chan<- fcmFindResult) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			s, p, l, ok := pickSfcm(randLmt, preP)
+			s, p, l, ok := fcmPickS(randLmt, preP)
 			if !ok {
 				continue
 			}
@@ -79,7 +79,7 @@ func routineFindSfcm(ctx context.Context, randLmt, preP *big.Int, resChan chan<-
 			}
 			ctx.Done()
 			select {
-			case resChan <- findResultFCM{gcd: gcd, l: l}:
+			case resChan <- fcmFindResult{gcd: gcd, l: l}:
 				return
 			default:
 				return
@@ -88,7 +88,7 @@ func routineFindSfcm(ctx context.Context, randLmt, preP *big.Int, resChan chan<-
 	}
 }
 
-func pickSfcm(randLmt, preP *big.Int) (s, p, l *big.Int, found bool) {
+func fcmPickS(randLmt, preP *big.Int) (s, p, l *big.Int, found bool) {
 	l = frand.BigIntn(randLmt)
 	l.Lsh(l, 1)
 	l.Add(l, big1)
@@ -134,7 +134,7 @@ func pickSfcm(randLmt, preP *big.Int) (s, p, l *big.Int, found bool) {
 	return
 }
 
-func denouementFCM(n, l *big.Int, gcd *comp.GaussianInt) *comp.HurwitzInt {
+func fcmDenouement(n, l *big.Int, gcd *comp.GaussianInt) *comp.HurwitzInt {
 	// compute gcrd(A + Bi + Lj, n), normalized to have integer component
 	// Hurwitz integer: A + Bi + Lj
 	hurwitzInt := hiPool.Get().(*comp.HurwitzInt).Update(gcd.R, gcd.I, l, big0, false)
