@@ -1,0 +1,6 @@
+github.com/txaty/go-bigcomplex v0.1.7 h1:TQmIhcMVGRDqFWLGF9bp+jJvsxnlEDyh5obyKMj8Iaw=
+github.com/txaty/go-bigcomplex v0.1.7/go.mod h1:1ECOsFZY8V9P7IF1y1V5TrRpmRJBgL1IQce1RXhnV7M=
+github.com/txaty/go-bigcomplex v0.2.0 h1:HF/ziBZyLuc5AwbWvCZVDoURCEkhHpNiA2nJ64y0yE8=
+github.com/txaty/go-bigcomplex v0.2.0/go.mod h1:BeG0DKWqvGjDPS8kv7biI8Ir1OPRU9gOx5wWndCDwfM=
+lukechampine.com/frand v1.5.1 h1:fg0eRtdmGFIxhP5zQJzM1lFDbD6CUfu/f+7WgAZd5/w=
+lukechampine.com/frand v1.5.1/go.mod h1:4VstaWc2plN4Mjr10chUD46RAVGWhpkZ5Nja8+Azp0Q=
