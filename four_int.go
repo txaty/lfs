@@ -2,61 +2,46 @@ package lfs
 
 import (
 	"math/big"
+	"sort"
+	"strings"
 )
 
-// FourInt is the 4-number big integer group
+// FourInt represents a group of four big.Int values.
 type FourInt [4]*big.Int
 
-// NewFourInt creates a new 4-number group, in descending order
-func NewFourInt(w1 *big.Int, w2 *big.Int, w3 *big.Int, w4 *big.Int) FourInt {
-	w1.Abs(w1)
-	w2.Abs(w2)
-	w3.Abs(w3)
-	w4.Abs(w4)
-	// sort the four big integers in descending order
-	if w1.Cmp(w2) == -1 {
-		w1, w2 = w2, w1
+// NewFourInt creates a new FourInt with its components sorted in descending order.
+func NewFourInt(w1, w2, w3, w4 *big.Int) FourInt {
+	ints := []*big.Int{
+		new(big.Int).Abs(w1),
+		new(big.Int).Abs(w2),
+		new(big.Int).Abs(w3),
+		new(big.Int).Abs(w4),
 	}
-	if w1.Cmp(w3) == -1 {
-		w1, w3 = w3, w1
-	}
-	if w1.Cmp(w4) == -1 {
-		w1, w4 = w4, w1
-	}
-	if w2.Cmp(w3) == -1 {
-		w2, w3 = w3, w2
-	}
-	if w2.Cmp(w4) == -1 {
-		w2, w4 = w4, w2
-	}
-	if w3.Cmp(w4) == -1 {
-		w3, w4 = w4, w3
-	}
-	return FourInt{w1, w2, w3, w4}
+	sort.Slice(ints, func(i, j int) bool {
+		return ints[i].Cmp(ints[j]) > 0
+	})
+	return FourInt{ints[0], ints[1], ints[2], ints[3]}
 }
 
-// Mul multiplies all the 4 numbers by n
+// Mul multiplies each component of FourInt by n.
 func (f *FourInt) Mul(n *big.Int) {
-	for i := 0; i < 4; i++ {
+	for i := range f {
 		f[i].Mul(f[i], n)
 	}
 }
 
-// Div divides all the 4 numbers by n
+// Div divides each component of FourInt by n.
 func (f *FourInt) Div(n *big.Int) {
-	for i := 0; i < 4; i++ {
+	for i := range f {
 		f[i].Div(f[i], n)
 	}
 }
 
-// String convert the FourInt object to string
+// String returns a string representation of FourInt.
 func (f *FourInt) String() string {
-	res := "{"
-	for i := 0; i < 3; i++ {
-		res += f[i].String()
-		res += ", "
+	parts := make([]string, len(f))
+	for i, num := range f {
+		parts[i] = num.String()
 	}
-	res += f[3].String()
-	res += "}"
-	return res
+	return "{" + strings.Join(parts, ", ") + "}"
 }
