@@ -1,7 +1,13 @@
-# Lagrange Four Square Sum
+# LFS - Lagrange Four-Squares
 
-Lagrange Four Square Sum is a Go package that implements an algorithm to solve the Lagrange four-square sum problem for large integers. 
-The algorithm computes a representation of a positive integer `n` as a sum of four squares:
+[![Go Reference](https://pkg.go.dev/badge/github.com/txaty/lfs.svg)](https://pkg.go.dev/github.com/txaty/lfs)
+[![Go Report Card](https://goreportcard.com/badge/github.com/txaty/lfs)](https://goreportcard.com/report/github.com/txaty/lfs)
+[![codecov](https://codecov.io/github/txaty/lfs/graph/badge.svg?token=ggYw40inA4)](https://codecov.io/github/txaty/lfs)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/fa8bf34169a242d58a1d952988f2e81e)](https://app.codacy.com/gh/txaty/lfs/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![MIT license](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+
+LFS is a Go package that implements an optimized algorithm for solving the Lagrange four-squares problem, even for very large integers.
+It computes a representation of any positive integer `n` as the sum of four squares:
 
 $$
 n = {w_0}^2 + {w_1}^2 + {w_2}^2 + {w_3}^2
@@ -9,7 +15,7 @@ $$
 
 This implementation is highly optimized for very large integers (e.g., 1000 bits, 2000 bits, or more).
 
-The algorithms are based on paper, [Finding the Four Squares in lagrange's Theorem](https://campus.lakeforest.edu/trevino/finding4squares.pdf) with improvements that significantly improve the speed.
+The underlying algorithms are based on Section 3 of the paper [Finding the Four Squares in Lagrange's Theorem](https://campus.lakeforest.edu/trevino/finding4squares.pdf) with additional improvements that significantly enhance performance.
 
 ## Usage
 
@@ -51,7 +57,6 @@ func main() {
         log.Fatal("Verification failed: The computed squares do not sum to n.")
     }
 }
-
 ```
 
 ## Configuration Options
@@ -77,7 +82,8 @@ The solver is configurable via functional options when creating a new instance. 
 
 This project requires the following dependencies:
 
-- [txaty/go-bigcomplex](https://github.com/txaty/go-bigcomplex): A big complex number library supporting big Gaussian and Hurwitz integers.
+- [txaty/go-bigcomplex](https://github.com/txaty/go-bigcomplex): A big complex number library supporting big Gaussian
+  and Hurwitz integers.
 - [lukechampine.com/frand](https://github.com/lukechampine/frand): A fast randomness generation library.
 
 ## License
